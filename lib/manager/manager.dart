@@ -1,9 +1,9 @@
 library manager;
 
 import 'dart:async';
+import 'package:server/api/models/models.dart';
 
 part 'code_completer.dart';
-part 'completion_item.dart';
 part 'general_completer.dart';
 
 class Options {
@@ -26,36 +26,16 @@ class Options {
   }
 }
 
-class Query {
-  int columnCodepoint;
-
-  int startCodepoint;
-
-  int get codeLength => columnCodepoint - startCodepoint;
-
-  bool forceSemantic;
-
-  Query();
-
-  void fromMap(Map map) {
-    //TODO
-  }
-
-  factory Query.FromMap(Map map) {
-    final query = new Query();
-    query.fromMap(map);
-    return query;
-  }
-}
-
 class Manager {
   final Options options;
 
-  final Map<String, CodeCompleter> _completers = {};
+  final Map<String, CodeCompleter> _completers;
 
   final GeneralCodeCompleter generalCompleter;
 
-  Manager(this.options) : generalCompleter = new GeneralCodeCompleter(options);
+  Manager(this.options, {Map<String, CodeCompleter> completers})
+      : generalCompleter = new GeneralCodeCompleter(options),
+        _completers = completers;
 
   Future shutdown() async {
     for (final CodeCompleter completer in _completers.values) {
@@ -73,12 +53,30 @@ class Manager {
     return null;
   }
 
-  bool isCompletionAvailableForFileType(final List<String> fileTypes) =>
+  bool isCompletionAvailable(List<String> fileTypes) =>
       fileTypes.any((String fileType) => _completers.containsKey(fileType));
 
-  bool isCompletionEnabledForFileType(final List<String> fileTypes) {
+  bool isCompletionEnabled(final List<String> fileTypes) {
     if (options.disabledFileType.contains('*')) return false;
     return !fileTypes
         .any((String file) => options.disabledFileType.contains(file));
+  }
+
+  bool isCompletionUsable(final List<String> fileTypes) =>
+      isCompletionEnabled(fileTypes) && isCompletionAvailable(fileTypes);
+
+  List<bool> shouldUseCompletion(Query query) {
+    if (isCompletionUsable(query.fileTypes)) {
+      if (query.forceSemanticCompletion) {
+        return <bool>[true, true];
+      } else {
+        return <bool>[
+          findCompleter(query.fileTypes).shouldUseNow(query),
+          false
+        ];
+      }
+    }
+
+    return <bool>[false, false];
   }
 }

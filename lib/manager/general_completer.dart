@@ -19,6 +19,6 @@ class GeneralCodeCompleter extends CodeCompleter {
       new CodeCompletionItem('hello2'),
       new CodeCompletionItem('hello3'),
       new CodeCompletionItem('hello4'),
-      ];
+    ];
   }
 }

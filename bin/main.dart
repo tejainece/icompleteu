@@ -9,16 +9,17 @@ import 'dart:io';
 import 'dart:convert';
 import 'package:logging/logging.dart';
 import 'package:server/manager/manager.dart';
+import 'package:server/completers/dart_completer/dart_completer.dart';
 
 Options _makeOption(_Args args) {
   dynamic filename = args.optionsFile;
   Map map = {};
-  if(filename is String) {
+  if (filename is String) {
     File file = new File(filename);
-    if(file.existsSync()) {
+    if (file.existsSync()) {
       String content = file.readAsStringSync();
       dynamic decoded = JSON.decode(content);
-      if(decoded is Map) {
+      if (decoded is Map) {
         map.addAll(decoded);
       }
     }
@@ -34,7 +35,9 @@ main(List<String> args) async {
 
     Options option = _makeOption(parsed);
 
-    Manager manager = new Manager(option);
+    Manager manager = new Manager(option, completers: {
+      'dart': new DartCompleter(option),
+    });
 
     server.IcuApi api = new server.IcuApi(manager);
 

@@ -10,6 +10,7 @@ part of icu.server.api;
 abstract class _$JaguarIcuApi implements RequestHandler {
   static const List<RouteBase> routes = const <RouteBase>[
     const Post(path: '/event_notification'),
+    const Post(path: '/completions'),
     const Get(path: '/healthy'),
     const Post(path: '/semantic_completion_available'),
     const Post(path: '/shutdown')
@@ -19,16 +20,17 @@ abstract class _$JaguarIcuApi implements RequestHandler {
 
   String _getHmac();
 
-  bool getHealth(QueryParams queryParams);
+  Future<Map<dynamic, dynamic>> getCompletions(Map<dynamic, dynamic> body);
 
-  bool isCompletionAvailableForFiletype(Map<dynamic, dynamic> body);
+  bool getHealth();
+
+  bool isCompletionAvailableForFileType(Map<dynamic, dynamic> body);
 
   Future<bool> shutdown();
 
   Future<Response> handleRequest(Request request, {String prefix: ''}) async {
     PathParams pathParams = new PathParams();
     bool match = false;
-    QueryParams queryParams = new QueryParams(request.uri.queryParameters);
 
 //Handler for eventNotification
     match =
@@ -83,11 +85,11 @@ abstract class _$JaguarIcuApi implements RequestHandler {
       }
     }
 
-//Handler for getHealth
+//Handler for getCompletions
     match =
         routes[1].match(request.uri.path, request.method, prefix, pathParams);
     if (match) {
-      Response<bool> rRouteResponse0 = new Response(null);
+      Response<Map> rRouteResponse0 = new Response(null);
       AllowedHosts iAllowedHosts;
       HmacAuthenticator iHmacAuthenticator;
       EncodeToJson iEncodeToJson;
@@ -112,13 +114,13 @@ abstract class _$JaguarIcuApi implements RequestHandler {
         );
         iEncodeToJson = new WrapEncodeToJson().createInterceptor();
         iDecodeJsonMap = new WrapDecodeJsonMap().createInterceptor();
-        await iDecodeJsonMap.pre(
+        Map<String, dynamic> rDecodeJsonMap = await iDecodeJsonMap.pre(
           request,
         );
         rRouteResponse0.statusCode = 200;
         rRouteResponse0.setContentType('text/plain; charset=us-ascii');
-        rRouteResponse0.value = getHealth(
-          new QueryParams.FromQueryParam(queryParams),
+        rRouteResponse0.value = await getCompletions(
+          rDecodeJsonMap,
         );
         Response<String> rRouteResponse1 = iEncodeToJson.post(
           rRouteResponse0,
@@ -136,9 +138,54 @@ abstract class _$JaguarIcuApi implements RequestHandler {
       }
     }
 
-//Handler for isCompletionAvailableForFiletype
+//Handler for getHealth
     match =
         routes[2].match(request.uri.path, request.method, prefix, pathParams);
+    if (match) {
+      Response<bool> rRouteResponse0 = new Response(null);
+      AllowedHosts iAllowedHosts;
+      HmacAuthenticator iHmacAuthenticator;
+      EncodeToJson iEncodeToJson;
+      try {
+        iAllowedHosts = new WrapAllowedHosts(
+          const <String>['127.0.0.1', 'localhost'],
+        ).createInterceptor();
+        iAllowedHosts.pre(
+          request,
+        );
+        iHmacAuthenticator = new WrapHmacAuthenticator(
+          makeParams: const <Symbol, MakeParam>{
+            #hmacSecret: const MakeParamFromMethod(#_getHmac)
+          },
+          hmacSecret: _getHmac(),
+        )
+            .createInterceptor();
+        await iHmacAuthenticator.pre(
+          request,
+          request.headers.value('x-ycm-hmac'),
+        );
+        iEncodeToJson = new WrapEncodeToJson().createInterceptor();
+        rRouteResponse0.statusCode = 200;
+        rRouteResponse0.setContentType('text/plain; charset=us-ascii');
+        rRouteResponse0.value = getHealth();
+        Response<String> rRouteResponse1 = iEncodeToJson.post(
+          rRouteResponse0,
+        );
+        Response<String> rRouteResponse2 = iHmacAuthenticator.post(
+          rRouteResponse1,
+        );
+        return rRouteResponse2;
+      } catch (e) {
+        await iEncodeToJson?.onException();
+        await iHmacAuthenticator?.onException();
+        await iAllowedHosts?.onException();
+        rethrow;
+      }
+    }
+
+//Handler for isCompletionAvailableForFileType
+    match =
+        routes[3].match(request.uri.path, request.method, prefix, pathParams);
     if (match) {
       Response<bool> rRouteResponse0 = new Response(null);
       AllowedHosts iAllowedHosts;
@@ -170,7 +217,7 @@ abstract class _$JaguarIcuApi implements RequestHandler {
         );
         rRouteResponse0.statusCode = 200;
         rRouteResponse0.setContentType('text/plain; charset=us-ascii');
-        rRouteResponse0.value = isCompletionAvailableForFiletype(
+        rRouteResponse0.value = isCompletionAvailableForFileType(
           rDecodeJsonMap,
         );
         Response<String> rRouteResponse1 = iEncodeToJson.post(
@@ -191,7 +238,7 @@ abstract class _$JaguarIcuApi implements RequestHandler {
 
 //Handler for shutdown
     match =
-        routes[3].match(request.uri.path, request.method, prefix, pathParams);
+        routes[4].match(request.uri.path, request.method, prefix, pathParams);
     if (match) {
       Response<bool> rRouteResponse0 = new Response(null);
       AllowedHosts iAllowedHosts;

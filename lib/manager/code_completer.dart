@@ -3,14 +3,18 @@ part of manager;
 abstract class CodeCompleter {
   Options get options;
 
-  int get minNumChars;
-
   //TODO prepared_triggers
 
   //TODO _completions_cache
 
   int completionType(Query query) => 0;
 
+  /// This function is called to check if the code completer can provide code
+  /// completion for the current code location.
+  ///
+  /// This is important to get right. You want to return False if you can't
+  /// provide completions because then the identifier completer will kick in,
+  /// and that's better than nothing.
   bool shouldUseNow(Query query) {
     /* TODO
     if (!shouldUseNowInner(query)) {
@@ -31,7 +35,7 @@ abstract class CodeCompleter {
       query.codeLength >= options.minNumChars;
 
   Future<List<CodeCompletionItem>> computeCandidates(Query query) async {
-    if (!query.forceSemantic && !shouldUseNow(query)) return [];
+    if (!query.forceSemanticCompletion && !shouldUseNow(query)) return [];
 
     //TODO search in cache
 
@@ -45,7 +49,7 @@ abstract class CodeCompleter {
   Future<List<CodeCompletionItem>> computeCandidatesInner(Query query);
 
   List<CodeCompletionItem> filterAndSortResults(
-      Query query, List<CodeCompletionItem> candidates) =>
+          Query query, List<CodeCompletionItem> candidates) =>
       candidates;
 
   Future<Null> onFileReadyToParse(Query query) async {}
@@ -59,7 +63,7 @@ abstract class CodeCompleter {
   Future<Null> onCurrentIdentifierFinished(Query query) async {}
 
   Future<dynamic> invokeEvent(String eventName, Query query) async {
-    switch(eventName) {
+    switch (eventName) {
       case 'FileReadyToParse':
         return onFileReadyToParse(query);
         break;

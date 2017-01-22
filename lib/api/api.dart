@@ -4,6 +4,7 @@
 library icu.server.api;
 
 import 'dart:io';
+import 'dart:convert';
 import 'dart:async';
 import 'package:jaguar/jaguar.dart';
 import 'package:jaguar/interceptors.dart';
@@ -45,23 +46,65 @@ class IcuApi extends _$JaguarIcuApi implements RequestHandler {
     */
   }
 
-  @Get(path: '/healthy')
+  @Post(path: '/completions')
   @WrapDecodeJsonMap()
-  bool getHealth(@InputQueryParams() QueryParams queryParams) {
+  Future<Map> getCompletions(@Input(DecodeJsonMap) Map body) async {
+    log.info('Received completion request');
+
+    final Query query = new Query.FromMap(body);
+
+    final List<bool> shouldUse = _manager.shouldUseCompletion(query);
+
+    final List<CompletionError> errors = [];
+    final List<CodeCompletionItem> completions = [];
+
+    bool completed = false;
+
+    if (shouldUse[0]) {
+      try {
+        completed = true;
+        completions.addAll(await _manager
+            .findCompleter(query.fileTypes)
+            .computeCandidates(query));
+      } catch (e, s) {
+        if (shouldUse[1]) {
+          rethrow;
+        } else {
+          errors.add(new CompletionError(e, s));
+        }
+      }
+    }
+
+    if (!completed && !shouldUse[1]) {
+      completions
+          .addAll(await _manager.generalCompleter.computeCandidates(query));
+    }
+
+    Map map = new CodeCompletionResponse(
+            completions, query.getIdentifierStartColumn(), errors)
+        .toJson();
+
+    log.info(JSON.encode(map));
+
+    return map;
+  }
+
+  @Get(path: '/healthy')
+  bool getHealth() {
     log.info('Received health request');
     return true;
   }
 
   @Post(path: '/semantic_completion_available')
   @WrapDecodeJsonMap()
-  bool isCompletionAvailableForFiletype(@Input(DecodeJsonMap) Map body) {
+  bool isCompletionAvailableForFileType(@Input(DecodeJsonMap) Map body) {
     log.info('Received filetype completion available request');
     log.info(body);
     if (body is! Map) {
       throw new Exception('Invalid body: Body is empty!');
     }
     final model = new SemanticCompletionAvailableModel.FromMap(body);
-    return _manager.isCompletionAvailableForFileType(model.fileTypes);
+    return _manager.isCompletionAvailable(model.fileTypes);
   }
 
   @Post(path: '/shutdown')

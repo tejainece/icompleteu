@@ -39,8 +39,7 @@ class HmacAuthenticator extends Interceptor {
     logged["body_hmac"] = BASE64.encode(_hmacEncode(UTF8.encode(body)));
     */
 
-    final String calc =
-    BASE64.encode(encode(req.method, req.uri.path, body));
+    final String calc = BASE64.encode(encode(req.method, req.uri.path, body));
 
     /* TODO
     logged["ret_hmac"] = calc;
@@ -64,7 +63,7 @@ class HmacAuthenticator extends Interceptor {
 
   List<int> encode(String method, String path, String body) {
     final List<int> data =
-    _hmacEncode(UTF8.encode(method)).toList(growable: true);
+        _hmacEncode(UTF8.encode(method)).toList(growable: true);
     data.addAll(_hmacEncode(UTF8.encode(path)));
     data.addAll(_hmacEncode(UTF8.encode(body)));
 
