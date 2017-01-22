@@ -8,69 +8,74 @@ import 'dart:async';
 import 'package:jaguar/jaguar.dart';
 import 'package:jaguar/interceptors.dart';
 import 'package:logging/logging.dart';
-import 'dart:convert';
+
+import 'package:server/manager/manager.dart';
+import 'package:server/api/interceptors/interceptors.dart';
+import 'package:server/api/models/models.dart';
 
 part 'api.g.dart';
 
 final Logger log = new Logger('icu.server');
 
-class EventNotificationModel {
-  int column;
-
-  int lineNum;
-
-  String eventName;
-
-  final Map<String, FileDataModel> fileData = {};
-
-  String filePath;
-
-  void fromJson(Map map) {
-    column = map['column_num'];
-    lineNum = map['line_num'];
-    eventName = map['event_name'];
-    filePath = map['filepath'];
-
-    fileData.clear();
-    for(String key in map['file_data'].keys) {
-      fileData[key] = new FileDataModel()..fromJson(map['file_data'][key]);
-      fileData[key].filePath = key;
-    }
-  }
-
-  String toString() => '$filePath:$lineNum:$column $eventName';
-}
-
-class FileDataModel {
-  String filePath;
-
-  String contents;
-
-  List<String> fileTypes;
-
-
-  void fromJson(Map map) {
-    contents = map['contents'];
-    fileTypes = map['filetypes'];
-  }
-}
-
 @Api()
+@WrapAllowedHosts(const <String>['127.0.0.1', 'localhost'])
+@WrapHmacAuthenticator(makeParams: const <Symbol, MakeParam>{
+  #hmacSecret: const MakeParamFromMethod(#_getHmac)
+})
+@WrapEncodeToJson()
 class IcuApi extends _$JaguarIcuApi implements RequestHandler {
+  final Manager _manager;
+
+  IcuApi(this._manager);
+
   @Post(path: '/event_notification')
   @WrapDecodeJsonMap()
-  eventNotification(@Input(DecodeJsonMap) Map body) {
-    log.info('Received event notification');
-    EventNotificationModel model = new EventNotificationModel();
-    model.fromJson(body);
-    log.info(model);
-    //TODO
+  Future eventNotification(@Input(DecodeJsonMap) Map body) async {
+    EventNotificationModel model = new EventNotificationModel.FromMap(body);
+    log.info('Received event notification: ${model.eventName}');
+    //DEBUG log.info(body);
+
+    await _manager.generalCompleter
+        .invokeEvent(model.eventName, new Query.FromMap(body));
+
+    /* TODO
+    for(FileDataModel dataModel in model.fileData.values) {
+      //TODO _manager.findCompleter();
+    }
+    */
   }
 
   @Get(path: '/healthy')
-  @WrapEncodeToJson()
-  getHealth(HttpRequest req) {
+  @WrapDecodeJsonMap()
+  bool getHealth(@InputQueryParams() QueryParams queryParams) {
     log.info('Received health request');
     return true;
   }
+
+  @Post(path: '/semantic_completion_available')
+  @WrapDecodeJsonMap()
+  bool isCompletionAvailableForFiletype(@Input(DecodeJsonMap) Map body) {
+    log.info('Received filetype completion available request');
+    log.info(body);
+    if (body is! Map) {
+      throw new Exception('Invalid body: Body is empty!');
+    }
+    final model = new SemanticCompletionAvailableModel.FromMap(body);
+    return _manager.isCompletionAvailableForFileType(model.fileTypes);
+  }
+
+  @Post(path: '/shutdown')
+  Future<bool> shutdown() async {
+    log.info('Received shutdown request');
+
+    await _manager.shutdown();
+
+    new Future.delayed(new Duration(seconds: 10), () {
+      exit(0);
+    });
+
+    return true;
+  }
+
+  String _getHmac() => _manager.options.hmac;
 }

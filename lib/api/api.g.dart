@@ -10,63 +10,230 @@ part of icu.server.api;
 abstract class _$JaguarIcuApi implements RequestHandler {
   static const List<RouteBase> routes = const <RouteBase>[
     const Post(path: '/event_notification'),
-    const Get(path: '/healthy')
+    const Get(path: '/healthy'),
+    const Post(path: '/semantic_completion_available'),
+    const Post(path: '/shutdown')
   ];
 
-  dynamic eventNotification(Map<dynamic, dynamic> body);
+  Future<dynamic> eventNotification(Map<dynamic, dynamic> body);
 
-  dynamic getHealth(HttpRequest req);
+  String _getHmac();
 
-  Future<bool> handleRequest(HttpRequest request, {String prefix: ''}) async {
+  bool getHealth(QueryParams queryParams);
+
+  bool isCompletionAvailableForFiletype(Map<dynamic, dynamic> body);
+
+  Future<bool> shutdown();
+
+  Future<Response> handleRequest(Request request, {String prefix: ''}) async {
     PathParams pathParams = new PathParams();
     bool match = false;
+    QueryParams queryParams = new QueryParams(request.uri.queryParameters);
 
 //Handler for eventNotification
     match =
         routes[0].match(request.uri.path, request.method, prefix, pathParams);
     if (match) {
       Response<dynamic> rRouteResponse0 = new Response(null);
+      AllowedHosts iAllowedHosts;
+      HmacAuthenticator iHmacAuthenticator;
+      EncodeToJson iEncodeToJson;
       DecodeJsonMap iDecodeJsonMap;
       try {
+        iAllowedHosts = new WrapAllowedHosts(
+          const <String>['127.0.0.1', 'localhost'],
+        ).createInterceptor();
+        iAllowedHosts.pre(
+          request,
+        );
+        iHmacAuthenticator = new WrapHmacAuthenticator(
+          makeParams: const <Symbol, MakeParam>{
+            #hmacSecret: const MakeParamFromMethod(#_getHmac)
+          },
+          hmacSecret: _getHmac(),
+        )
+            .createInterceptor();
+        await iHmacAuthenticator.pre(
+          request,
+          request.headers.value('x-ycm-hmac'),
+        );
+        iEncodeToJson = new WrapEncodeToJson().createInterceptor();
         iDecodeJsonMap = new WrapDecodeJsonMap().createInterceptor();
         Map<String, dynamic> rDecodeJsonMap = await iDecodeJsonMap.pre(
           request,
         );
         rRouteResponse0.statusCode = 200;
-        rRouteResponse0.value = eventNotification(
+        rRouteResponse0.setContentType('text/plain; charset=us-ascii');
+        rRouteResponse0.value = await eventNotification(
           rDecodeJsonMap,
         );
-        await rRouteResponse0.writeResponse(request.response);
+        Response<String> rRouteResponse1 = iEncodeToJson.post(
+          rRouteResponse0,
+        );
+        Response<String> rRouteResponse2 = iHmacAuthenticator.post(
+          rRouteResponse1,
+        );
+        return rRouteResponse2;
       } catch (e) {
         await iDecodeJsonMap?.onException();
+        await iEncodeToJson?.onException();
+        await iHmacAuthenticator?.onException();
+        await iAllowedHosts?.onException();
         rethrow;
       }
-      return true;
     }
 
 //Handler for getHealth
     match =
         routes[1].match(request.uri.path, request.method, prefix, pathParams);
     if (match) {
-      Response<dynamic> rRouteResponse0 = new Response(null);
+      Response<bool> rRouteResponse0 = new Response(null);
+      AllowedHosts iAllowedHosts;
+      HmacAuthenticator iHmacAuthenticator;
       EncodeToJson iEncodeToJson;
+      DecodeJsonMap iDecodeJsonMap;
       try {
-        iEncodeToJson = new WrapEncodeToJson().createInterceptor();
-        rRouteResponse0.statusCode = 200;
-        rRouteResponse0.value = getHealth(
+        iAllowedHosts = new WrapAllowedHosts(
+          const <String>['127.0.0.1', 'localhost'],
+        ).createInterceptor();
+        iAllowedHosts.pre(
           request,
+        );
+        iHmacAuthenticator = new WrapHmacAuthenticator(
+          makeParams: const <Symbol, MakeParam>{
+            #hmacSecret: const MakeParamFromMethod(#_getHmac)
+          },
+          hmacSecret: _getHmac(),
+        )
+            .createInterceptor();
+        await iHmacAuthenticator.pre(
+          request,
+          request.headers.value('x-ycm-hmac'),
+        );
+        iEncodeToJson = new WrapEncodeToJson().createInterceptor();
+        iDecodeJsonMap = new WrapDecodeJsonMap().createInterceptor();
+        await iDecodeJsonMap.pre(
+          request,
+        );
+        rRouteResponse0.statusCode = 200;
+        rRouteResponse0.setContentType('text/plain; charset=us-ascii');
+        rRouteResponse0.value = getHealth(
+          new QueryParams.FromQueryParam(queryParams),
         );
         Response<String> rRouteResponse1 = iEncodeToJson.post(
           rRouteResponse0,
         );
-        await rRouteResponse1.writeResponse(request.response);
+        Response<String> rRouteResponse2 = iHmacAuthenticator.post(
+          rRouteResponse1,
+        );
+        return rRouteResponse2;
       } catch (e) {
+        await iDecodeJsonMap?.onException();
         await iEncodeToJson?.onException();
+        await iHmacAuthenticator?.onException();
+        await iAllowedHosts?.onException();
         rethrow;
       }
-      return true;
     }
 
-    return false;
+//Handler for isCompletionAvailableForFiletype
+    match =
+        routes[2].match(request.uri.path, request.method, prefix, pathParams);
+    if (match) {
+      Response<bool> rRouteResponse0 = new Response(null);
+      AllowedHosts iAllowedHosts;
+      HmacAuthenticator iHmacAuthenticator;
+      EncodeToJson iEncodeToJson;
+      DecodeJsonMap iDecodeJsonMap;
+      try {
+        iAllowedHosts = new WrapAllowedHosts(
+          const <String>['127.0.0.1', 'localhost'],
+        ).createInterceptor();
+        iAllowedHosts.pre(
+          request,
+        );
+        iHmacAuthenticator = new WrapHmacAuthenticator(
+          makeParams: const <Symbol, MakeParam>{
+            #hmacSecret: const MakeParamFromMethod(#_getHmac)
+          },
+          hmacSecret: _getHmac(),
+        )
+            .createInterceptor();
+        await iHmacAuthenticator.pre(
+          request,
+          request.headers.value('x-ycm-hmac'),
+        );
+        iEncodeToJson = new WrapEncodeToJson().createInterceptor();
+        iDecodeJsonMap = new WrapDecodeJsonMap().createInterceptor();
+        Map<String, dynamic> rDecodeJsonMap = await iDecodeJsonMap.pre(
+          request,
+        );
+        rRouteResponse0.statusCode = 200;
+        rRouteResponse0.setContentType('text/plain; charset=us-ascii');
+        rRouteResponse0.value = isCompletionAvailableForFiletype(
+          rDecodeJsonMap,
+        );
+        Response<String> rRouteResponse1 = iEncodeToJson.post(
+          rRouteResponse0,
+        );
+        Response<String> rRouteResponse2 = iHmacAuthenticator.post(
+          rRouteResponse1,
+        );
+        return rRouteResponse2;
+      } catch (e) {
+        await iDecodeJsonMap?.onException();
+        await iEncodeToJson?.onException();
+        await iHmacAuthenticator?.onException();
+        await iAllowedHosts?.onException();
+        rethrow;
+      }
+    }
+
+//Handler for shutdown
+    match =
+        routes[3].match(request.uri.path, request.method, prefix, pathParams);
+    if (match) {
+      Response<bool> rRouteResponse0 = new Response(null);
+      AllowedHosts iAllowedHosts;
+      HmacAuthenticator iHmacAuthenticator;
+      EncodeToJson iEncodeToJson;
+      try {
+        iAllowedHosts = new WrapAllowedHosts(
+          const <String>['127.0.0.1', 'localhost'],
+        ).createInterceptor();
+        iAllowedHosts.pre(
+          request,
+        );
+        iHmacAuthenticator = new WrapHmacAuthenticator(
+          makeParams: const <Symbol, MakeParam>{
+            #hmacSecret: const MakeParamFromMethod(#_getHmac)
+          },
+          hmacSecret: _getHmac(),
+        )
+            .createInterceptor();
+        await iHmacAuthenticator.pre(
+          request,
+          request.headers.value('x-ycm-hmac'),
+        );
+        iEncodeToJson = new WrapEncodeToJson().createInterceptor();
+        rRouteResponse0.statusCode = 200;
+        rRouteResponse0.setContentType('text/plain; charset=us-ascii');
+        rRouteResponse0.value = await shutdown();
+        Response<String> rRouteResponse1 = iEncodeToJson.post(
+          rRouteResponse0,
+        );
+        Response<String> rRouteResponse2 = iHmacAuthenticator.post(
+          rRouteResponse1,
+        );
+        return rRouteResponse2;
+      } catch (e) {
+        await iEncodeToJson?.onException();
+        await iHmacAuthenticator?.onException();
+        await iAllowedHosts?.onException();
+        rethrow;
+      }
+    }
+
+    return null;
   }
 }

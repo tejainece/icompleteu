@@ -6,7 +6,25 @@ import 'package:jaguar/jaguar.dart';
 import 'package:scribe/scribe.dart';
 import 'package:args/args.dart';
 import 'dart:io';
+import 'dart:convert';
 import 'package:logging/logging.dart';
+import 'package:server/manager/manager.dart';
+
+Options _makeOption(_Args args) {
+  dynamic filename = args.optionsFile;
+  Map map = {};
+  if(filename is String) {
+    File file = new File(filename);
+    if(file.existsSync()) {
+      String content = file.readAsStringSync();
+      dynamic decoded = JSON.decode(content);
+      if(decoded is Map) {
+        map.addAll(decoded);
+      }
+    }
+  }
+  return new Options.FromMap(map);
+}
 
 main(List<String> args) async {
   File f = new File('/home/teja/hello2.txt');
@@ -14,7 +32,11 @@ main(List<String> args) async {
     final _Args parsed = parse(args);
     parsed.validate();
 
-    server.IcuApi api = new server.IcuApi();
+    Options option = _makeOption(parsed);
+
+    Manager manager = new Manager(option);
+
+    server.IcuApi api = new server.IcuApi(manager);
 
     Configuration conf = new Configuration(
         address: parsed.host, port: parsed.port, multiThread: true);
@@ -38,6 +60,7 @@ main(List<String> args) async {
     await serve(conf);
   } catch (e, s) {
     f.writeAsStringSync(e.toString());
+    f.writeAsStringSync(s.toString());
   }
 }
 
