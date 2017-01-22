@@ -2,6 +2,7 @@ library dart_analyser_client;
 
 import 'dart:io';
 import 'dart:async';
+import 'dart:convert';
 import 'package:path/path.dart' as path;
 
 class AnalyzerConfig {
@@ -15,6 +16,7 @@ class AnalyzerConfig {
 
   AnalyzerConfig(this.directory);
 
+  //TODO dart.exe for windows
   String get dartVMPath => path.join(sdkPath, 'bin', 'dart');
 
   String getSnapshotPath(String snapshotName) =>
@@ -32,19 +34,24 @@ class AnalyzerConfig {
 class Analyzer {
   final AnalyzerConfig config;
 
-  ProcessResult _process;
+  Process _process;
+
+  StreamSubscription<String> _inStreamSub;
 
   Analyzer(this.config);
 
   bool get isRunning => _process != null;
 
   Future<Null> start() async {
-    if(isRunning) {
+    if (isRunning) {
       throw new Exception("Analyzer already running!");
     }
     _process = await _createProcess(config);
-
-    //TODO connect writer and reader
+    _inStreamSub = _process.stdout
+        .transform(UTF8.encoder)
+        .transform(new LineSplitter())
+        .listen(_processInMsg);
+    //TODO connect writer
   }
 
   /// Restarts, or starts, the analysis server process.
@@ -58,14 +65,18 @@ class Analyzer {
 
   Future<Null> kill() async {
     if (isRunning) {
-      Process.killPid(_process.pid);
+      _process.kill();
       _process = null;
-      //TODO unlink writer and reader
+      if (_inStreamSub is StreamSubscription) _inStreamSub.cancel();
+      //TODO listener for when process terminates
     }
   }
 
+  void _processInMsg(String msg) {
+    //TODO
+  }
 
-  static Future<ProcessResult> _createProcess(AnalyzerConfig config) {
+  static Future<Process> _createProcess(AnalyzerConfig config) {
     List<String> arguments = <String>[];
 
     if (config.useChecked) {
@@ -87,6 +98,6 @@ class Analyzer {
 
     arguments.add('--client-id=icu');
 
-    return Process.run(config.dartVMPath, arguments);
+    return Process.start(config.dartVMPath, arguments);
   }
 }
