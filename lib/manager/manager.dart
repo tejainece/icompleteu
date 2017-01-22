@@ -1,7 +1,7 @@
 library manager;
 
 import 'dart:async';
-import 'package:server/api/models/models.dart';
+import 'package:icu_server/api/models/models.dart';
 
 part 'code_completer.dart';
 part 'general_completer.dart';

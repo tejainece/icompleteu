@@ -10,9 +10,9 @@ import 'package:jaguar/jaguar.dart';
 import 'package:jaguar/interceptors.dart';
 import 'package:logging/logging.dart';
 
-import 'package:server/manager/manager.dart';
-import 'package:server/api/interceptors/interceptors.dart';
-import 'package:server/api/models/models.dart';
+import 'package:icu_server/manager/manager.dart';
+import 'package:icu_server/api/interceptors/interceptors.dart';
+import 'package:icu_server/api/models/models.dart';
 
 part 'api.g.dart';
 

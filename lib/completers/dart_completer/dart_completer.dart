@@ -1,8 +1,8 @@
 library icu.completers.dart;
 
 import 'dart:async';
-import 'package:server/manager/manager.dart';
-import 'package:server/api/models/models.dart';
+import 'package:icu_server/manager/manager.dart';
+import 'package:icu_server/api/models/models.dart';
 
 class DartCompleter extends CodeCompleter {
   final Options options;

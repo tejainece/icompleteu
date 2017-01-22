@@ -3,7 +3,7 @@ library icu.server.api.models;
 import 'dart:convert';
 import 'package:jaguar/src/http/json/json.dart';
 
-import 'package:server/identifier/identifier.dart';
+import 'package:icu_server/identifier/identifier.dart';
 
 class FileDataModel {
   String filePath;

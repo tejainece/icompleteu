@@ -1,15 +1,16 @@
 // Copyright (c) 2017, teja. All rights reserved. Use of this source code
 // is governed by a BSD-style license that can be found in the LICENSE file.
 
-import 'package:server/api/api.dart' as server;
+import 'package:icu_server/api/api.dart' as server;
 import 'package:jaguar/jaguar.dart';
 import 'package:scribe/scribe.dart';
 import 'package:args/args.dart';
 import 'dart:io';
 import 'dart:convert';
 import 'package:logging/logging.dart';
-import 'package:server/manager/manager.dart';
-import 'package:server/completers/dart_completer/dart_completer.dart';
+import 'package:icu_server/manager/manager.dart';
+import 'package:icu_server/completers/dart_completer/dart_completer.dart';
+import 'package:path/path.dart' as path;
 
 Options _makeOption(_Args args) {
   dynamic filename = args.optionsFile;
@@ -28,7 +29,9 @@ Options _makeOption(_Args args) {
 }
 
 main(List<String> args) async {
-  File f = new File('/home/teja/hello2.txt');
+  Directory temp = await Directory.systemTemp.createTemp('icu');
+  String crashFileName = path.join(temp.path, 'crash.log');
+  File crashFile = new File(crashFileName);
   try {
     final _Args parsed = parse(args);
     parsed.validate();
@@ -62,8 +65,8 @@ main(List<String> args) async {
 
     await serve(conf);
   } catch (e, s) {
-    f.writeAsStringSync(e.toString());
-    f.writeAsStringSync(s.toString());
+    crashFile.writeAsStringSync(e.toString());
+    crashFile.writeAsStringSync(s.toString());
   }
 }
 
