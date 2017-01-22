@@ -43,39 +43,24 @@ class Analyzer {
       throw new Exception("Analyzer already running!");
     }
     _process = await _createProcess(config);
+
+    //TODO connect writer and reader
   }
 
   /// Restarts, or starts, the analysis server process.
-  Future<Null> restart(Sdk sdk) async {
+  Future<Null> restart() async {
     if (isRunning) {
-      Process.killPid(_process.pid);
-      _process = null;
+      await kill();
     }
 
     await start();
   }
 
-  Future<int> kill() {
-    _logger.fine("server forcibly terminated");
-
-    if (process != null) {
-      try {
-        server.shutdown().catchError((e) => null);
-      } catch (e) { }
-
-      /*Future f =*/ process.kill();
-      process = null;
-
-      try {
-        dispose();
-      } catch (e) { }
-
-      if (!_processCompleter.isCompleted) _processCompleter.complete(0);
-
-      return new Future.value(0);
-    } else {
-      _logger.info("kill signal sent to dead analysis server");
-      return new Future.value(1);
+  Future<Null> kill() async {
+    if (isRunning) {
+      Process.killPid(_process.pid);
+      _process = null;
+      //TODO unlink writer and reader
     }
   }
 
