@@ -62,6 +62,7 @@ abstract class CodeCompleter {
 
   Future<Null> onCurrentIdentifierFinished(Query query) async {}
 
+  /// Invokes an event
   Future<dynamic> invokeEvent(String eventName, Query query) async {
     switch (eventName) {
       case 'FileReadyToParse':
@@ -90,15 +91,19 @@ abstract class CodeCompleter {
   Future<Null> getDetailedDiagnostic();
   */
 
+  /// Returns supported file types
   Set<String> getSupportedFileTypes();
 
   /* TODO
   String getDebugInfo(Query query);
   */
 
+  /// Shuts down
   Future<Null> shutdown();
 
+  /// Is the server ready
   bool isServerReady() => isServerHealthy();
 
+  /// Is the server healthy
   bool isServerHealthy() => true;
 }
