@@ -116,7 +116,7 @@ class IcuApi extends _$JaguarIcuApi implements RequestHandler {
 
     await _manager.shutdown();
 
-    new Future.delayed(new Duration(seconds: 10), () {
+    new Timer(new Duration(seconds: 10), () {
       exit(0);
     });
 

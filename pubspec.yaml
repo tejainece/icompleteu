@@ -1,5 +1,5 @@
 name: icu_server
-version: 0.0.2
+version: 0.0.3
 description: Completion system for Vim
 author: Raiv Teja Gudapati <tejainece@gmail.com>
 homepage: https://github.com/tejainece/icompleteu
