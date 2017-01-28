@@ -12,10 +12,6 @@ class GeneralCodeCompleter extends CodeCompleter {
   Future<Null> shutdown() async {}
 
   Future<List<CodeCompletionItem>> computeCandidatesInner(Query query) async {
-    //TODO
-
-    return [
-      new CodeCompletionItem('norm1'),
-    ];
+    return [];  //TODO
   }
 }
