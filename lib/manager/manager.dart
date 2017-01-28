@@ -31,6 +31,8 @@ class Manager {
 
   final Map<String, CodeCompleter> _completers;
 
+  Map<String, CodeCompleter> get completers => _completers;
+
   final GeneralCodeCompleter generalCompleter;
 
   Manager(this.options, {Map<String, CodeCompleter> completers})

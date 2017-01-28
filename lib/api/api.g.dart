@@ -10,7 +10,7 @@ part of icu.server.api;
 abstract class _$JaguarIcuApi implements RequestHandler {
   static const List<RouteBase> routes = const <RouteBase>[
     const Post(path: '/event_notification'),
-    const Post(path: '/completions'),
+    const Post(path: '/completions', charset: 'utf-8'),
     const Get(path: '/healthy'),
     const Post(path: '/semantic_completion_available'),
     const Post(path: '/shutdown')
@@ -65,7 +65,8 @@ abstract class _$JaguarIcuApi implements RequestHandler {
           request,
         );
         rRouteResponse0.statusCode = 200;
-        rRouteResponse0.setContentType('text/plain; charset=us-ascii');
+        rRouteResponse0.headers
+            .set('content-type', 'text/plain; charset=utf-8');
         rRouteResponse0.value = await eventNotification(
           rDecodeJsonMap,
         );
@@ -118,7 +119,8 @@ abstract class _$JaguarIcuApi implements RequestHandler {
           request,
         );
         rRouteResponse0.statusCode = 200;
-        rRouteResponse0.setContentType('text/plain; charset=us-ascii');
+        rRouteResponse0.headers
+            .set('content-type', 'text/plain; charset=utf-8');
         rRouteResponse0.value = await getCompletions(
           rDecodeJsonMap,
         );
@@ -166,7 +168,8 @@ abstract class _$JaguarIcuApi implements RequestHandler {
         );
         iEncodeToJson = new WrapEncodeToJson().createInterceptor();
         rRouteResponse0.statusCode = 200;
-        rRouteResponse0.setContentType('text/plain; charset=us-ascii');
+        rRouteResponse0.headers
+            .set('content-type', 'text/plain; charset=utf-8');
         rRouteResponse0.value = getHealth();
         Response<String> rRouteResponse1 = iEncodeToJson.post(
           rRouteResponse0,
@@ -216,7 +219,8 @@ abstract class _$JaguarIcuApi implements RequestHandler {
           request,
         );
         rRouteResponse0.statusCode = 200;
-        rRouteResponse0.setContentType('text/plain; charset=us-ascii');
+        rRouteResponse0.headers
+            .set('content-type', 'text/plain; charset=utf-8');
         rRouteResponse0.value = isCompletionAvailableForFileType(
           rDecodeJsonMap,
         );
@@ -264,7 +268,8 @@ abstract class _$JaguarIcuApi implements RequestHandler {
         );
         iEncodeToJson = new WrapEncodeToJson().createInterceptor();
         rRouteResponse0.statusCode = 200;
-        rRouteResponse0.setContentType('text/plain; charset=us-ascii');
+        rRouteResponse0.headers
+            .set('content-type', 'text/plain; charset=utf-8');
         rRouteResponse0.value = await shutdown();
         Response<String> rRouteResponse1 = iEncodeToJson.post(
           rRouteResponse0,

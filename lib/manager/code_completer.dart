@@ -34,6 +34,7 @@ abstract class CodeCompleter {
   bool isQueryLengthAboveMinThreshold(Query query) =>
       query.codeLength >= options.minNumChars;
 
+  /// Computes code completion candidate for given location
   Future<List<CodeCompletionItem>> computeCandidates(Query query) async {
     if (!query.forceSemanticCompletion && !shouldUseNow(query)) return [];
 

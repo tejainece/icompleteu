@@ -26,6 +26,8 @@ class FileDataModel {
       dynamic value = map['filetypes'];
       if (value is List<String>) {
         fileTypes = map['filetypes'];
+      } else if (value is String) {
+        fileTypes = <String>[map['filetypes']];
       } else {
         fileTypes = <String>[];
       }
@@ -33,9 +35,28 @@ class FileDataModel {
   }
 
   String getLine(int lineNum) {
-    final List<String> lines = new LineSplitter().convert(contents);
-    if (lineNum >= lines.length) return '';
-    return lines[lineNum];
+    if(lineNum < 1) return '';
+    List<String> lines = new LineSplitter().convert(contents);
+    if ((lineNum-1) >= lines.length) return '';
+    return lines[lineNum-1];
+  }
+
+  int offset(int lineNum, int colNum) {
+    int curline = 1;
+    int curcol = 1;
+    for(int i = 0; i < contents.length; i++) {
+      if(curline == lineNum && curcol == colNum) return i+1;
+
+      if(contents[i] == '\n') {
+        curline += 1;
+        curcol = 1;
+        continue;
+      }
+
+      curcol++;
+    }
+
+    return -1;
   }
 }
 
@@ -81,6 +102,10 @@ class BaseModel {
       fileData[key] = new FileDataModel()..fromJson(map['file_data'][key]);
       fileData[key].filePath = key;
     }
+
+    {
+
+    }
   }
 
   String getLine(String filepath, int lineNum) {
@@ -88,6 +113,12 @@ class BaseModel {
     if (file is! FileDataModel) return '';
     return file.getLine(lineNum);
   }
+
+  FileDataModel get selFileData => fileData[filePath];
+
+  String get contents => selFileData.contents;
+
+  int get offset => selFileData.offset(lineNum, columnNum);
 }
 
 class EventNotificationModel extends BaseModel {
@@ -149,20 +180,18 @@ class Query extends BaseModel {
 
   final List<String> fileTypes = [];
 
-  String get lineValue => getLine(filePath, lineNum - 1);
+  String get lineValue => getLine(filePath, lineNum);
 
   Query();
 
   int getIdentifierStartColumn() {
-    String fileType;
-    if (fileTypes.length > 0) {
-      fileType = fileTypes.first;
-    }
+    final String fileType = fileTypes.isNotEmpty? fileTypes.first: null;
     return toIdentifierStartColumn(lineValue, columnNum, fileType);
   }
 
   void fromMap(Map map) {
     super.fromJson(map);
+    fileTypes.addAll(fileData[filePath].fileTypes);
   }
 
   factory Query.FromMap(Map map) {
@@ -181,9 +210,9 @@ int toIdentifierStartColumn(String lineVal, int columnVal, String fileType) {
 
 int byteOffsetToUnicodeOffset(String string, int byteOffset) {
   List<int> bytes = UTF8.encode(string);
-  if (bytes.length < byteOffset) return 0;
+  if (bytes.length < (byteOffset-1)) return 0;
 
-  return UTF8.decode(bytes.sublist(0, byteOffset)).length + 1;
+  return UTF8.decode(bytes.sublist(0, byteOffset-1)).length+1;
 }
 
 class CompletionError implements ToJsonable {
@@ -225,18 +254,15 @@ class CodeCompletionItem implements ToJsonable {
   Map toJson() {
     Map map = {};
     if (insertionText is String) map['insertion_text'] = insertionText;
-    /* TODO
-    {
-      : insertionText,
-    'menu_text': menuText,
-    'extra_menu_info': extraMenuInfo,
-    'kind': kind,
-    'detailed_info': detailedInfo,
-    'extra_data': extraData,
-  };
-  */
+    if (extraMenuInfo is String) map['extra_menu_info'] = extraMenuInfo;
+    if (menuText is String) map['menu_text'] = menuText;
+    if (kind is String) map['kind'] = kind;
+    if (detailedInfo is String) map['detailed_info'] = detailedInfo;
+    if (extraData is String) map['extra_data'] = extraData;
     return map;
   }
+
+  String toString() => insertionText;
 }
 
 class CodeCompletionResponse implements ToJsonable {

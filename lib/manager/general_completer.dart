@@ -15,10 +15,7 @@ class GeneralCodeCompleter extends CodeCompleter {
     //TODO
 
     return [
-      new CodeCompletionItem('hello1'),
-      new CodeCompletionItem('hello2'),
-      new CodeCompletionItem('hello3'),
-      new CodeCompletionItem('hello4'),
+      new CodeCompletionItem('norm1'),
     ];
   }
 }

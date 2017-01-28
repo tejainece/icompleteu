@@ -13,6 +13,7 @@ import 'package:logging/logging.dart';
 import 'package:icu_server/manager/manager.dart';
 import 'package:icu_server/api/interceptors/interceptors.dart';
 import 'package:icu_server/api/models/models.dart';
+import 'package:icu_server/identifier/identifier.dart';
 
 part 'api.g.dart';
 
@@ -33,23 +34,26 @@ class IcuApi extends _$JaguarIcuApi implements RequestHandler {
   @WrapDecodeJsonMap()
   Future eventNotification(@Input(DecodeJsonMap) Map body) async {
     EventNotificationModel model = new EventNotificationModel.FromMap(body);
-    log.info('Received event notification: ${model.eventName}');
+    log.info(
+        'Received event notification: ${model.eventName} ${model.filePath}');
     //DEBUG log.info(body);
+    final q = new Query.FromMap(body);
 
-    await _manager.generalCompleter
-        .invokeEvent(model.eventName, new Query.FromMap(body));
+    await _manager.generalCompleter.invokeEvent(model.eventName, q);
 
-    /* TODO
-    for(FileDataModel dataModel in model.fileData.values) {
-      //TODO _manager.findCompleter();
-    }
-    */
+    CodeCompleter comp =
+        _manager.findCompleter(model.fileData[model.filePath].fileTypes);
+
+    await comp.invokeEvent(model.eventName, q);
+
+    //TODO return response if any
   }
 
-  @Post(path: '/completions')
+  @Post(path: '/completions', charset: 'utf-8')
   @WrapDecodeJsonMap()
   Future<Map> getCompletions(@Input(DecodeJsonMap) Map body) async {
     log.info('Received completion request');
+    log.info(body);
 
     final Query query = new Query.FromMap(body);
 
@@ -74,6 +78,7 @@ class IcuApi extends _$JaguarIcuApi implements RequestHandler {
         }
       }
     }
+    log.info(completions);
 
     if (!completed && !shouldUse[1]) {
       completions
@@ -83,8 +88,6 @@ class IcuApi extends _$JaguarIcuApi implements RequestHandler {
     Map map = new CodeCompletionResponse(
             completions, query.getIdentifierStartColumn(), errors)
         .toJson();
-
-    log.info(JSON.encode(map));
 
     return map;
   }

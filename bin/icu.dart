@@ -39,7 +39,7 @@ main(List<String> args) async {
     Options option = _makeOption(parsed);
 
     Manager manager = new Manager(option, completers: {
-      'dart': new DartCompleter(option),
+      'dart': await DartCompleter.make(option),
     });
 
     server.IcuApi api = new server.IcuApi(manager);
