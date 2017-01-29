@@ -43,8 +43,6 @@ class IcuApi extends _$JaguarIcuApi implements RequestHandler {
 
     final result = await comp.invokeEvent(model.eventName, q);
 
-    log.info(result);
-
     return result;
   }
 
