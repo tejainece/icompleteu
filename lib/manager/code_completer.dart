@@ -25,9 +25,17 @@ abstract class CodeCompleter {
     return true;
   }
 
-  bool shouldUseNowInner(Query query) => true;
-  //TODO implement triggers
-  //TODO    query.identifier is String && query.identifier.isNotEmpty;
+  bool shouldUseNowInner(Query query) {
+    if(query.identifier is String && query.identifier.isNotEmpty) {
+      return true;
+    }
+
+    if(query.columnPosUnicode <= 1) return false;
+
+    if(query.lineValue.length < query.columnPosUnicode-2) return false;
+
+    return query.lineValue[query.columnPosUnicode-2] == '.';
+  }
 
   bool isQueryLengthAboveMinThreshold(Query query) =>
       query.identifierLength >= options.minNumChars;
