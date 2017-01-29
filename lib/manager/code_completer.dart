@@ -71,6 +71,7 @@ abstract class CodeCompleter {
 
   /// Invokes an event
   Future<dynamic> invokeEvent(String eventName, BaseModel query) async {
+
     switch (eventName) {
       case 'FileReadyToParse':
         return onFileReadyToParse(query);
