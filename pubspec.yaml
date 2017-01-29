@@ -1,5 +1,5 @@
 name: icu_server
-version: 0.0.3
+version: 0.0.4
 description: Completion system for Vim
 author: Raiv Teja Gudapati <tejainece@gmail.com>
 homepage: https://github.com/tejainece/icompleteu
@@ -17,6 +17,8 @@ dependencies:
   crypto: '>=2.0.0 < 3.0.0'
   path: '>=1.4.1 <2.0.0'
   dart_analysis_client: '>=0.0.2 <0.1.0'
+  bit_set: '>=0.1.0 <0.2.0'
+  edit_distance:
 
 dev_dependencies:
   test: '>=0.12.0 <0.13.0'

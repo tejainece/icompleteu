@@ -2,8 +2,10 @@ library manager;
 
 import 'dart:async';
 import 'package:icu_server/api/models/models.dart';
+import 'package:icu_server/filter_and_sort/filter_and_sort.dart';
 
 part 'code_completer.dart';
+part 'completion_cache.dart';
 part 'general_completer.dart';
 
 class Options {
@@ -47,7 +49,7 @@ class Manager {
     await generalCompleter.shutdown();
   }
 
-  CodeCompleter findCompleter(List<String> fileTypes) {
+  CodeCompleter findCompleter(Set<String> fileTypes) {
     for (String fileType in fileTypes) {
       final CodeCompleter completer = _completers[fileType];
       if (completer is CodeCompleter) return completer;
@@ -55,16 +57,16 @@ class Manager {
     return null;
   }
 
-  bool isCompletionAvailable(List<String> fileTypes) =>
+  bool isCompletionAvailable(Set<String> fileTypes) =>
       fileTypes.any((String fileType) => _completers.containsKey(fileType));
 
-  bool isCompletionEnabled(final List<String> fileTypes) {
+  bool isCompletionEnabled(final Set<String> fileTypes) {
     if (options.disabledFileType.contains('*')) return false;
     return !fileTypes
         .any((String file) => options.disabledFileType.contains(file));
   }
 
-  bool isCompletionUsable(final List<String> fileTypes) =>
+  bool isCompletionUsable(final Set<String> fileTypes) =>
       isCompletionEnabled(fileTypes) && isCompletionAvailable(fileTypes);
 
   List<bool> shouldUseCompletion(Query query) {

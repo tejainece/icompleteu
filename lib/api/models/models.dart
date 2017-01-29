@@ -1,5 +1,6 @@
 library icu.server.api.models;
 
+import 'dart:collection';
 import 'dart:convert';
 import 'package:jaguar/src/http/json/json.dart';
 
@@ -10,7 +11,7 @@ class FileDataModel {
 
   String contents;
 
-  List<String> fileTypes;
+  final LinkedHashSet<String> fileTypes = new LinkedHashSet<String>();
 
   void fromJson(Map map) {
     {
@@ -25,29 +26,27 @@ class FileDataModel {
     {
       dynamic value = map['filetypes'];
       if (value is List<String>) {
-        fileTypes = map['filetypes'];
+        fileTypes.addAll(map['filetypes']);
       } else if (value is String) {
-        fileTypes = <String>[map['filetypes']];
-      } else {
-        fileTypes = <String>[];
+        fileTypes.add(map['filetypes']);
       }
     }
   }
 
   String getLine(int lineNum) {
-    if(lineNum < 1) return '';
+    if (lineNum < 1) return '';
     List<String> lines = new LineSplitter().convert(contents);
-    if ((lineNum-1) >= lines.length) return '';
-    return lines[lineNum-1];
+    if ((lineNum - 1) >= lines.length) return '';
+    return lines[lineNum - 1];
   }
 
   int offset(int lineNum, int colNum) {
     int curline = 1;
     int curcol = 1;
-    for(int i = 0; i < contents.length; i++) {
-      if(curline == lineNum && curcol == colNum) return i+1;
+    for (int i = 0; i < contents.length; i++) {
+      if (curline == lineNum && curcol == colNum) return i + 1;
 
-      if(contents[i] == '\n') {
+      if (contents[i] == '\n') {
         curline += 1;
         curcol = 1;
         continue;
@@ -66,6 +65,33 @@ class BaseModel {
   int columnNum;
 
   String filePath;
+
+  final LinkedHashSet<String> fileTypes = new LinkedHashSet<String>();
+
+  int get columnPosUnicode => byteOffsetToUnicodeOffset(lineValue, columnNum);
+
+  int get identifierPosUnicode => getIdentifierStartColumn();
+
+  int get identifierLength => columnPosUnicode - identifierPosUnicode;
+
+  String get identifier {
+
+    return lineValue.substring(identifierPosUnicode - 1, columnPosUnicode-1);
+  }
+
+  int getIdentifierStartColumn() {
+    final String fileType = fileTypes.isNotEmpty ? fileTypes.first : null;
+    return toIdentifierStartColumn(lineValue, columnNum, fileType);
+  }
+
+  String _lineValue;
+
+  String get lineValue {
+    if (_lineValue is String) return _lineValue;
+
+    _lineValue = selFileData.getLine(lineNum);
+    return _lineValue;
+  }
 
   final Map<String, FileDataModel> fileData = {};
 
@@ -103,9 +129,7 @@ class BaseModel {
       fileData[key].filePath = key;
     }
 
-    {
-
-    }
+    fileTypes.addAll(fileData[filePath].fileTypes);
   }
 
   String getLine(String filepath, int lineNum) {
@@ -141,8 +165,6 @@ class EventNotificationModel extends BaseModel {
 }
 
 class SemanticCompletionAvailableModel extends BaseModel {
-  List<String> fileTypes;
-
   SemanticCompletionAvailableModel._();
 
   factory SemanticCompletionAvailableModel.FromMap(Map map) {
@@ -152,46 +174,28 @@ class SemanticCompletionAvailableModel extends BaseModel {
   }
 
   void fromJson(Map map) {
-    super.fromJson(map);
     {
       dynamic data = map['filetypes'];
       if (data is String) {
-        fileTypes = <String>[data];
+        fileTypes.add(data);
       } else if (data is List<String>) {
-        fileTypes = data;
-      } else {
-        fileTypes = <String>[];
+        fileTypes.addAll(data);
       }
     }
+    super.fromJson(map);
   }
 
   String toString() => '$filePath:$lineNum:$columnNum $fileTypes';
 }
 
 class Query extends BaseModel {
-  int get columnCodepoint => byteOffsetToUnicodeOffset(lineValue, columnNum);
-
-  int get startCodepoint => getIdentifierStartColumn();
-
-  int get codeLength => columnCodepoint - startCodepoint;
-
   /// Forces semantic completion
   bool forceSemanticCompletion;
 
-  final List<String> fileTypes = [];
-
-  String get lineValue => getLine(filePath, lineNum);
-
   Query();
-
-  int getIdentifierStartColumn() {
-    final String fileType = fileTypes.isNotEmpty? fileTypes.first: null;
-    return toIdentifierStartColumn(lineValue, columnNum, fileType);
-  }
 
   void fromMap(Map map) {
     super.fromJson(map);
-    fileTypes.addAll(fileData[filePath].fileTypes);
   }
 
   factory Query.FromMap(Map map) {
@@ -210,9 +214,9 @@ int toIdentifierStartColumn(String lineVal, int columnVal, String fileType) {
 
 int byteOffsetToUnicodeOffset(String string, int byteOffset) {
   List<int> bytes = UTF8.encode(string);
-  if (bytes.length < (byteOffset-1)) return 0;
+  if (bytes.length < (byteOffset - 1)) return 0;
 
-  return UTF8.decode(bytes.sublist(0, byteOffset-1)).length+1;
+  return UTF8.decode(bytes.sublist(0, byteOffset - 1)).length + 1;
 }
 
 class CompletionError implements ToJsonable {

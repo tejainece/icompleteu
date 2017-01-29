@@ -5,53 +5,59 @@ abstract class CodeCompleter {
 
   //TODO prepared_triggers
 
-  //TODO _completions_cache
+  final CompletionCacheStore _cache = new CompletionCacheStore();
 
   int completionType(Query query) => 0;
 
-  /// This function is called to check if the code completer can provide code
-  /// completion for the current code location.
-  ///
-  /// This is important to get right. You want to return False if you can't
-  /// provide completions because then the identifier completer will kick in,
-  /// and that's better than nothing.
+  /// Should we show code completion popup at the given code point?
   bool shouldUseNow(Query query) {
-    /* TODO
     if (!shouldUseNowInner(query)) {
-      //TODO invalidate cache
+      _cache.invalidate();
       return false;
     }
-    */
 
-    //TODO cache
+    FilterAndSortBase completions = _cache.getCompletions(
+        query.lineNum, query.identifierPosUnicode, completionType(query));
+
+    if (completions is! FilterAndSortBase) return true;
+    if (completions.candidates.isEmpty) return false;
+
     return true;
   }
 
-  /* TODO
-  bool shouldUseNowInner(Query query);
-  */
+  bool shouldUseNowInner(Query query) => true;
+  //TODO implement triggers
+  //TODO    query.identifier is String && query.identifier.isNotEmpty;
 
   bool isQueryLengthAboveMinThreshold(Query query) =>
-      query.codeLength >= options.minNumChars;
+      query.identifierLength >= options.minNumChars;
 
   /// Computes code completion candidate for given location
   Future<List<CodeCompletionItem>> computeCandidates(Query query) async {
+    /// Skip if completion not forced and completion is not required
     if (!query.forceSemanticCompletion && !shouldUseNow(query)) return [];
 
-    //TODO search in cache
+    FilterAndSortBase completions = _cache.getCompletions(
+        query.lineNum, query.identifierPosUnicode, completionType(query));
 
-    List<CodeCompletionItem> result = await computeCandidatesInner(query);
+    if (completions is! FilterAndSortBase) {
+      completions = createFilterAndSorter(await computeCandidatesInner(query));
+      //update cache
+      _cache.update(new CompletionCacheData(query.lineNum,
+          query.identifierPosUnicode, completionType(query), completions));
+    }
 
-    //TODO update cache
+    if (query.identifier is! String || query.identifier.isEmpty)
+      return completions.candidates;
 
-    return result;
+    return completions.perform(query.identifier);
   }
 
   Future<List<CodeCompletionItem>> computeCandidatesInner(Query query);
 
-  List<CodeCompletionItem> filterAndSortResults(
-          Query query, List<CodeCompletionItem> candidates) =>
-      candidates;
+  FilterAndSortBase createFilterAndSorter(
+          List<CodeCompletionItem> candidates) =>
+      new FilterAndSort.make(candidates);
 
   Future<Null> onFileReadyToParse(Query query) async {}
 

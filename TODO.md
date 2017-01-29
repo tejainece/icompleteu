@@ -5,3 +5,4 @@
 
 Bug fixes
 - [ ] Update completion list as new letters are being typed
+- [ ] Implement fuzzy search

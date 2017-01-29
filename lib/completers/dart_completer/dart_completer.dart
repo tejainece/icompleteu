@@ -34,27 +34,29 @@ class DartCompleter extends CodeCompleter {
     GetSuggestionResult result =
         await _server.getSuggestions(query.filePath, query.offset - 1);
 
-//    List<CompletionSuggestion> sugs = result.results
-//        .where((CompletionSuggestion res) => res.relevance > 500)
-//        .toList();
-//    sugs.sort((CompletionSuggestion x, CompletionSuggestion y) =>
-//        x.relevance.compareTo(y.relevance));
-
     return result.results.map((CompletionSuggestion sug) {
-      String extraMenuInfo;
-      if (_isFunctionalKind(sug.element.kind)) {
-        final Element el = sug.element;
-        extraMenuInfo = '${el.parameters} \u{2192} ${el.returnType}';
+      String menuText = sug.completion;
+      if (sug.element != null) {
+        if(_isFunctionalKind(sug.element.kind)) {
+          final Element el = sug.element;
+          menuText += '${el.parameters} \u{2192} ${el.returnType}';
+        } else if(sug.returnType != null) {
+          menuText += ' \u{2192} ${sug.returnType}';
+        } else {
+          //Do nothing
+        }
       } else {
-        extraMenuInfo = sug.returnType;
+        //Do nothing
       }
       return new CodeCompletionItem(
         sug.completion,
-        extraMenuInfo: extraMenuInfo,
-        kind: sug.element.kind,
+        menuText: menuText,
+        kind: sug.element?.kind,
       );
     }).toList();
   }
+
+
 
   Future<Null> shutdown() async {
     await _server.kill();

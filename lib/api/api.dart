@@ -4,7 +4,6 @@
 library icu.server.api;
 
 import 'dart:io';
-import 'dart:convert';
 import 'dart:async';
 import 'package:jaguar/jaguar.dart';
 import 'package:jaguar/interceptors.dart';
@@ -13,7 +12,6 @@ import 'package:logging/logging.dart';
 import 'package:icu_server/manager/manager.dart';
 import 'package:icu_server/api/interceptors/interceptors.dart';
 import 'package:icu_server/api/models/models.dart';
-import 'package:icu_server/identifier/identifier.dart';
 
 part 'api.g.dart';
 
@@ -53,7 +51,6 @@ class IcuApi extends _$JaguarIcuApi implements RequestHandler {
   @WrapDecodeJsonMap()
   Future<Map> getCompletions(@Input(DecodeJsonMap) Map body) async {
     log.info('Received completion request');
-    log.info(body);
 
     final Query query = new Query.FromMap(body);
 
@@ -78,7 +75,6 @@ class IcuApi extends _$JaguarIcuApi implements RequestHandler {
         }
       }
     }
-    log.info(completions);
 
     if (!completed && !shouldUse[1]) {
       completions
@@ -102,7 +98,7 @@ class IcuApi extends _$JaguarIcuApi implements RequestHandler {
   @WrapDecodeJsonMap()
   bool isCompletionAvailableForFileType(@Input(DecodeJsonMap) Map body) {
     log.info('Received filetype completion available request');
-    log.info(body);
+    //DEBUG log.info(body);
     if (body is! Map) {
       throw new Exception('Invalid body: Body is empty!');
     }
@@ -116,9 +112,7 @@ class IcuApi extends _$JaguarIcuApi implements RequestHandler {
 
     await _manager.shutdown();
 
-    new Timer(new Duration(seconds: 10), () {
-      exit(0);
-    });
+    exit(0);
 
     return true;
   }
