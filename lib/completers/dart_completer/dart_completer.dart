@@ -67,11 +67,10 @@ class DartCompleter extends CodeCompleter {
   }
 
   @override
-  Future<List<Map>> onFileReadyToParse(BaseModel query) async {
+  Future<List<Diagnostics>> onFileReadyToParse(BaseModel query) async {
     await _ensureFileInAnalysisServer(query.filePath);
-    /* TODO
     await _server.updateFileContentAdd(
-        query.filePath, query.fileData[query.filePath].contents);*/
+        query.filePath, query.fileData[query.filePath].contents);
     return await getDetailedDiagnostic(query);
   }
 
@@ -89,7 +88,7 @@ class DartCompleter extends CodeCompleter {
     await _server.setPriorityFiles([filename]);
   }
 
-  Future<List<Map>> getDetailedDiagnostic(BaseModel query) async {
+  Future<List<Diagnostics>> getDetailedDiagnostic(BaseModel query) async {
     List<AnalysisError> result =
         (await _server.getErrors(query.filePath)).errors;
 
@@ -107,8 +106,7 @@ class DartCompleter extends CodeCompleter {
               [],
               err.severity);
         })
-        //TODO .where((Diagnostics diag) => diag != null)
-        .map((Diagnostics diag) => diag.toJson())
+        .where((Diagnostics diag) => diag != null)
         .toList();
   }
 }

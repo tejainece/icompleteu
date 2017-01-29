@@ -3,8 +3,6 @@ part of manager;
 abstract class CodeCompleter {
   Options get options;
 
-  //TODO prepared_triggers
-
   final CompletionCacheStore _cache = new CompletionCacheStore();
 
   int completionType(Query query) => 0;
@@ -67,7 +65,7 @@ abstract class CodeCompleter {
           List<CodeCompletionItem> candidates) =>
       new FilterAndSort.make(candidates);
 
-  Future<List<Map>> onFileReadyToParse(BaseModel query) async => [];
+  Future<List<Diagnostics>> onFileReadyToParse(BaseModel query) async => [];
 
   Future<Null> onBufferVisit(BaseModel query) async {}
 
@@ -82,7 +80,8 @@ abstract class CodeCompleter {
 
     switch (eventName) {
       case 'FileReadyToParse':
-        return onFileReadyToParse(query);
+        List<Diagnostics> result = await onFileReadyToParse(query);
+        return result.map((Diagnostics diag) => diag.toJson()).toList();
         break;
       case 'BufferVisit':
         return onBufferVisit(query);
@@ -101,7 +100,7 @@ abstract class CodeCompleter {
     }
   }
 
-  Future<List<Map>> getDetailedDiagnostic(BaseModel query) async => null;
+  Future<List<Diagnostics>> getDetailedDiagnostic(BaseModel query) async => null;
 
   /// Returns supported file types
   Set<String> getSupportedFileTypes();
